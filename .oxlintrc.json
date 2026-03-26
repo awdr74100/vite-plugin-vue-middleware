@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue"],
+  "ignorePatterns": ["node_modules/", ".agent/", "dist/", "pnpm-lock.yaml"],
+  "categories": {
+    "correctness": "error"
+  }
+}
