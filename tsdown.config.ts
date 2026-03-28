@@ -4,9 +4,11 @@ export default defineConfig({
   entry: ['./src/index.ts', './src/runtime.ts'],
   format: ['esm', 'cjs'],
   dts: true,
-  bundle: false,
+  outputOptions: {
+    exports: 'named',
+  },
   deps: {
-    neverBundle: ['vite', 'vue-router', 'vue', 'node:fs', 'node:path'],
+    skipNodeModulesBundle: true,
   },
   clean: true,
 });
