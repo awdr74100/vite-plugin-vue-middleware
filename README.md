@@ -1,8 +1,8 @@
 # vite-plugin-vue-middleware
 
-[![npm version](https://badge.fury.io/js/vite-plugin-vue-middleware.svg)](https://badge.fury.io/js/vite-plugin-vue-middleware)
-[![ci status](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml/badge.svg)](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/vite-plugin-vue-middleware.svg)](https://www.npmjs.com/package/vite-plugin-vue-middleware)
+[![build status](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml/badge.svg)](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/vite-plugin-vue-middleware)](https://github.com/awdr74100/vite-plugin-vue-middleware/blob/main/LICENSE)
 
 Type-safe navigation middleware for Vite and Vue Router. Enjoy a Nuxt-like middleware system in your standard Vite projects with full TypeScript support.
 
@@ -16,10 +16,22 @@ Type-safe navigation middleware for Vite and Vue Router. Enjoy a Nuxt-like middl
 
 ## 📦 Installation
 
+Using npm:
+
+```bash
+npm install -D vite-plugin-vue-middleware
+```
+
+Using yarn:
+
+```bash
+yarn add -D vite-plugin-vue-middleware
+```
+
+Using pnpm:
+
 ```bash
 pnpm add -D vite-plugin-vue-middleware
-# or
-npm install -D vite-plugin-vue-middleware
 ```
 
 ## 🚀 Quick Start
@@ -157,6 +169,26 @@ const routes = [
     }
   }
 ]
+```
+
+### 🌟 Integration with Vue Router v5 (File-based Routing)
+
+This plugin is fully compatible with the modern **Vue Router v5** ecosystem and [unplugin-vue-router](https://github.com/posva/unplugin-vue-router) (which provides the official File-based Routing logic for Vue). You can define middleware directly in your `.vue` files using the `definePage` macro:
+
+```vue
+<script setup lang="ts">
+/**
+ * Using definePage (Vue Router v5 / unplugin-vue-router)
+ */
+import { definePage } from 'unplugin-vue-router/runtime'
+
+definePage({
+  meta: {
+    // You'll get the same type-safe IntelliSense here!
+    middleware: ['auth']
+  }
+})
+</script>
 ```
 
 ## ⚙️ Configuration
