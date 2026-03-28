@@ -1,12 +1,12 @@
 import type { Router, RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
 
 /**
- * @description Middleware 執行後的結果型別
+ * Route guard return type
  */
 export type RouteGuardReturn = void | Error | string | boolean | RouteLocationRaw;
 
 /**
- * @description Middleware 處理函式型別，用於 defineMiddleware
+ * Middleware guard function type, used for defineMiddleware
  */
 export type MiddlewareGuard = (
   to: RouteLocationNormalized,
@@ -14,12 +14,12 @@ export type MiddlewareGuard = (
 ) => RouteGuardReturn | Promise<RouteGuardReturn>;
 
 /**
- * 定義 Middleware 的輔助函式，提供強型別支援
+ * Helper function for defining middleware with type safety
  *
  * @description
- * 使用此函式定義 Middleware 可以獲得完善的 TypeScript 型別支援。
+ * Using this function to define middleware provides full TypeScript support.
  *
- * @param {MiddlewareGuard} middleware - Middleware 處理函式
+ * @param {MiddlewareGuard} middleware - Middleware handler function
  * @returns {MiddlewareGuard}
  *
  * @example
@@ -32,12 +32,11 @@ export function defineMiddleware(middleware: MiddlewareGuard): MiddlewareGuard {
 }
 
 /**
- * 核心 Middleware 執行邏輯（內部使用）
+ * Core middleware execution logic (internal use)
  *
- * @param {Router} router - Vue Router 實例
- * @param {MiddlewareGuard[]} globalMiddleware - 全域 Middleware 清單
- * @param {Record<string, MiddlewareGuard>} namedMiddleware - 具名 Middleware 對應表
- * @returns {void}
+ * @param {Router} router - Vue Router instance
+ * @param {MiddlewareGuard[]} globalMiddleware - List of global middleware
+ * @param {Record<string, MiddlewareGuard>} namedMiddleware - Map of named middleware
  */
 export function setupMiddleware(
   router: Router,
@@ -45,7 +44,7 @@ export function setupMiddleware(
   namedMiddleware: Record<string, MiddlewareGuard>,
 ): void {
   router.beforeEach(async (to, from) => {
-    // 依序執行 Global Middleware
+    // Execute Global Middleware in order
     for (const middleware of globalMiddleware) {
       const result = await middleware(to, from);
 
@@ -54,13 +53,13 @@ export function setupMiddleware(
       if (result) return result;
     }
 
-    // 取得當前路由的 middleware (支援陣列或單一字串)
+    // Get current route's middleware (supports array or single string)
     const routeMiddleware = to.meta.middleware;
     if (!routeMiddleware) return;
 
     const middlewareKeys = Array.isArray(routeMiddleware) ? routeMiddleware : [routeMiddleware];
 
-    // 依序執行 Named Middleware
+    // Execute Named Middleware in order
     for (const key of middlewareKeys) {
       if (typeof key !== 'string') continue;
 

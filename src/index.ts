@@ -1,59 +1,67 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from 'node:fs/promises';
+import { glob } from 'tinyglobby';
+import path from 'pathe';
 import type { Plugin, ResolvedConfig } from 'vite';
 
-export interface Options {
+/**
+ * Plugin configuration options
+ */
+export type Options = {
   /**
-   * 包含 middleware 的目錄路徑，相對於專案根目錄
+   * Directory containing middleware files, relative to project root
    * @default 'src/middleware'
    */
   middlewareDir?: string;
   /**
-   * 是否自動生成 TypeScript 宣告檔，可傳入路徑字串
+   * Glob patterns to exclude from scanning
+   * @default []
+   */
+  exclude?: string[];
+  /**
+   * Whether to automatically generate TypeScript declaration file.
+   * Can be a boolean or a custom string path (relative or absolute).
    * @default true
    */
   dts?: boolean | string;
-}
+};
 
 const VIRTUAL_MODULE_ID = 'virtual:vue-middleware';
 const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID;
 
-interface MiddlewareFile {
+/**
+ * Middleware file information
+ */
+type MiddlewareFile = {
   name: string;
   path: string;
   isGlobal: boolean;
   order: number;
-}
+};
 
-// 遞迴讀取目錄下的所有檔案
-function walk(dir: string, fileList: string[] = []): string[] {
-  if (!fs.existsSync(dir)) return fileList;
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    if (fs.statSync(fullPath).isDirectory()) {
-      walk(fullPath, fileList);
-    } else {
-      fileList.push(fullPath);
-    }
+/**
+ * Parse middleware directory and generate a file list
+ * @description Reads JS/TS files in the specified directory and parses naming rules (EAFP)
+ * @param {string} dir - Directory path
+ * @param {string[]} exclude - List of glob patterns to exclude
+ * @returns {Promise<MiddlewareFile[]>} Parsed middleware file list
+ */
+async function parseMiddlewareFiles(dir: string, exclude: string[] = []): Promise<MiddlewareFile[]> {
+  try {
+    await fs.access(dir);
+  } catch {
+    return [];
   }
-  return fileList;
-}
 
-// 將 Windows 路徑轉為 posix
-function normalizePath(p: string): string {
-  return p.split(path.sep).join('/');
-}
+  const allFiles = await glob(['**/*.{ts,js}'], {
+    cwd: dir,
+    absolute: true,
+    ignore: exclude,
+  });
 
-// 解析 middleware 目錄並產生清單
-function parseMiddlewareFiles(dir: string): MiddlewareFile[] {
-  const allFiles = walk(dir);
   const middlewareFiles: MiddlewareFile[] = [];
 
   for (const fullPath of allFiles) {
-    if (!fullPath.endsWith('.ts') && !fullPath.endsWith('.js')) continue;
-
-    const relPath = normalizePath(path.relative(dir, fullPath));
+    const relPath = path.relative(dir, fullPath);
     const nameWithoutExt = relPath.replace(/\.[^.]+$/, '');
 
     let isGlobal = false;
@@ -79,7 +87,7 @@ function parseMiddlewareFiles(dir: string): MiddlewareFile[] {
 
     middlewareFiles.push({
       name,
-      path: normalizePath(fullPath),
+      path: fullPath,
       isGlobal,
       order,
     });
@@ -88,8 +96,14 @@ function parseMiddlewareFiles(dir: string): MiddlewareFile[] {
   return middlewareFiles.sort((a, b) => a.order - b.order);
 }
 
-// 產生 d.ts
-function generateDts(middlewareFiles: MiddlewareFile[], dtsPath: string) {
+/**
+ * Generate TypeScript declaration file (d.ts)
+ * @description Extends RouteMeta of vue-router based on current middleware files
+ * @param {MiddlewareFile[]} middlewareFiles - List of middleware files
+ * @param {string} dtsPath - Output file path
+ * @returns {Promise<void>}
+ */
+async function generateDts(middlewareFiles: MiddlewareFile[], dtsPath: string): Promise<void> {
   const namedMiddlewares = middlewareFiles.filter((m) => !m.isGlobal).map((m) => `"${m.name}"`);
 
   const typeUnion = namedMiddlewares.length > 0 ? namedMiddlewares.join(' | ') : 'string';
@@ -106,51 +120,78 @@ declare module 'vue-router' {
   }
 }
 `;
-  fs.writeFileSync(dtsPath, dtsContent, 'utf-8');
+  await fs.writeFile(dtsPath, dtsContent, 'utf-8');
 }
 
+/**
+ * Vite Plugin: Vue Middleware
+ * @description Type-safe navigation middleware for Vue Router with virtual module and HMR support
+ * @param {Partial<Options>} options - Plugin configuration options
+ * @returns {Plugin}
+ */
 export default function vitePluginVueMiddleware(options: Partial<Options> = {}): Plugin {
-  const { middlewareDir = 'src/middleware', dts = true } = options;
+  const { middlewareDir = 'src/middleware', dts = true, exclude = [] } = options;
 
-  let resolvedDir: string;
-  let resolvedDtsPath: string | undefined;
+  let viteConfig: ResolvedConfig;
+  let pathsPromise: Promise<{ resolvedDir: string; resolvedDtsPath?: string }> | null = null;
 
-  return {
-    name: 'vite-plugin-vue-middleware',
-    configResolved(config: ResolvedConfig) {
-      resolvedDir = path.resolve(config.root, middlewareDir);
+  /**
+   * Initialize and cache plugin-required paths
+   * @description Lazily resolves middleware directory and d.ts output path based on config (follows EAFP)
+   * @returns {Promise<{ resolvedDir: string; resolvedDtsPath?: string }>}
+   */
+  async function initPaths() {
+    if (pathsPromise) return pathsPromise;
+    pathsPromise = (async () => {
+      const root = viteConfig.root;
+      const resolvedDir = path.resolve(root, middlewareDir);
+      let resolvedDtsPath: string | undefined;
 
       if (dts) {
         if (typeof dts === 'string') {
-          resolvedDtsPath = path.resolve(config.root, dts);
+          resolvedDtsPath = path.resolve(root, dts);
         } else {
-          // 優先產放在 src 目錄下，以確保大多數 Vue 專案的 tsconfig 能自動 include
-          const srcPath = path.resolve(config.root, 'src');
-          const targetDir = fs.existsSync(srcPath) ? srcPath : config.root;
-          resolvedDtsPath = path.resolve(targetDir, 'middleware.d.ts');
+          // Default to project root
+          resolvedDtsPath = path.resolve(root, 'middleware.d.ts');
         }
       }
+
+      return { resolvedDir, resolvedDtsPath };
+    })();
+    return pathsPromise;
+  }
+
+  return {
+    name: 'vite-plugin-vue-middleware',
+
+    configResolved(config) {
+      viteConfig = config;
     },
-    buildStart() {
-      // 確保在編譯開始時產生（或更新）型別檔
-      if (dts && resolvedDir) {
-        const files = parseMiddlewareFiles(resolvedDir);
+
+    async buildStart() {
+      const { resolvedDir, resolvedDtsPath } = await initPaths();
+      // Ensure type declarations are generated or updated at build start
+      if (dts) {
+        const files = await parseMiddlewareFiles(resolvedDir, exclude);
         if (resolvedDtsPath) {
-          generateDts(files, resolvedDtsPath);
+          await generateDts(files, resolvedDtsPath);
         }
       }
     },
+
     resolveId(id: string) {
       if (id === VIRTUAL_MODULE_ID) {
         return RESOLVED_VIRTUAL_MODULE_ID;
       }
     },
-    load(id: string) {
-      if (id === RESOLVED_VIRTUAL_MODULE_ID) {
-        const files = parseMiddlewareFiles(resolvedDir);
 
-        let code = `import { setupMiddleware as _setup } from "vite-plugin-vue-middleware/runtime";\n`;
-        code += `export { defineMiddleware } from "vite-plugin-vue-middleware/runtime";\n\n`;
+    async load(id: string) {
+      if (id === RESOLVED_VIRTUAL_MODULE_ID) {
+        const { resolvedDir } = await initPaths();
+        const files = await parseMiddlewareFiles(resolvedDir, exclude);
+
+        let code = 'import { setupMiddleware as _setup } from "vite-plugin-vue-middleware/runtime";\n';
+        code += 'export { defineMiddleware } from "vite-plugin-vue-middleware/runtime";\n\n';
 
         const globalImports: string[] = [];
         const namedImports: string[] = [];
@@ -172,25 +213,28 @@ export default function vitePluginVueMiddleware(options: Partial<Options> = {}):
         return code;
       }
     },
+
     configureServer(server) {
-      const _handleFileChange = (file: string) => {
-        const normalizedFile = normalizePath(file);
-        const normalizedDir = normalizePath(resolvedDir);
+      const _handleFileChange = async (file: string) => {
+        const { resolvedDir, resolvedDtsPath } = await initPaths();
+        // pathe uses posix separators by default
+        const normalizedFile = path.normalize(file);
+        const normalizedDir = path.normalize(resolvedDir);
 
         if (normalizedFile.startsWith(normalizedDir)) {
-          // 重新產生型別定義檔
+          // Regenerate type definition file
           if (dts && resolvedDtsPath) {
-            const files = parseMiddlewareFiles(resolvedDir);
-            generateDts(files, resolvedDtsPath);
+            const files = await parseMiddlewareFiles(resolvedDir, exclude);
+            await generateDts(files, resolvedDtsPath);
           }
 
-          // 使虛擬模組失效
+          // Invalidate virtual module
           const mod = server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_MODULE_ID);
           if (mod) {
             server.moduleGraph.invalidateModule(mod);
           }
 
-          // 觸發全頁重新整理，確保 runtime 狀態同步
+          // Trigger full reload to ensure runtime state stays in sync
           server.ws.send({ type: 'full-reload' });
         }
       };
