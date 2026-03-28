@@ -41,9 +41,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/forbidden': RouteRecordInfo<
+      '/forbidden',
+      '/forbidden',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/news': RouteRecordInfo<
       '/news',
       '/news',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/test': RouteRecordInfo<
+      '/test',
+      '/test',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -73,9 +87,21 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'src/pages/forbidden.vue': {
+      routes:
+        | '/forbidden'
+      views:
+        | never
+    }
     'src/pages/news.vue': {
       routes:
         | '/news'
+      views:
+        | never
+    }
+    'src/pages/test.vue': {
+      routes:
+        | '/test'
       views:
         | never
     }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePage({
   meta: {
-    middleware: 'named-one'
+    middleware: ['named-one', 'named-two']
   },
 });
 </script>
@@ -9,8 +9,8 @@ definePage({
 <template>
   <div class="flex flex-col items-center justify-center space-y-6">
     <div class="text-center">
-      <h1 class="text-4xl font-black mb-2 italic">About Page</h1>
-      <p class="text-fuchsia-400 font-mono text-sm">Executing: Global 1 -> Global 2 -> Named 1 (Only)</p>
+      <h1 class="text-4xl font-black mb-2">Test Page</h1>
+      <p class="text-sky-400 font-mono text-sm underline decoration-wavy">Executing: Global 1 -> Global 2 -> Named 1 -> Named 2</p>
     </div>
 
     <button
