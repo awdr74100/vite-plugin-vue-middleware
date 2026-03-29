@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-vue-middleware",
   "version": "0.1.0",
-  "description": "Type-safe navigation middleware for Vue Router",
+  "description": "File-based navigation guards for Vue Router",
   "keywords": [
     "middleware",
     "router",

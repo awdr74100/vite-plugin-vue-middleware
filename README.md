@@ -4,7 +4,7 @@
 [![build status](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml/badge.svg)](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/vite-plugin-vue-middleware)](https://github.com/awdr74100/vite-plugin-vue-middleware/blob/main/LICENSE)
 
-Type-safe navigation middleware for Vite and Vue Router. Enjoy a Nuxt-like middleware system in your standard Vite projects with full TypeScript support.
+File-based navigation guards for Vue Router with full type safety and automated middleware injection.
 
 ## ✨ Features
 
