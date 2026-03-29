@@ -1,23 +1,18 @@
-import type { Router, RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
+import type { Router, NavigationGuardWithThis, NavigationGuardReturn } from 'vue-router';
 
 /**
- * Route guard return type
+ * Route guard return type, aligned with vue-router's NavigationGuardReturn
  */
-export type RouteGuardReturn = void | Error | string | boolean | RouteLocationRaw;
+export type RouteGuardReturn = NavigationGuardReturn;
 
 /**
- * Middleware guard function type, used for defineMiddleware
+ * Middleware guard function type
+ * @description Uses NavigationGuardWithThis<undefined> to align with Vue 3 / Router 4+ standards
  */
-export type MiddlewareGuard = (
-  to: RouteLocationNormalized,
-  from: RouteLocationNormalized,
-) => RouteGuardReturn | Promise<RouteGuardReturn>;
+export type MiddlewareGuard = NavigationGuardWithThis<undefined>;
 
 /**
  * Helper function for defining middleware with type safety
- *
- * @description
- * Using this function to define middleware provides full TypeScript support.
  *
  * @param {MiddlewareGuard} middleware - Middleware handler function
  * @returns {MiddlewareGuard}
@@ -32,7 +27,7 @@ export function defineMiddleware(middleware: MiddlewareGuard): MiddlewareGuard {
 }
 
 /**
- * Core middleware execution logic (internal use)
+ * Core middleware execution logic
  *
  * @param {Router} router - Vue Router instance
  * @param {MiddlewareGuard[]} globalMiddleware - List of global middleware
@@ -44,9 +39,9 @@ export function setupMiddleware(
   namedMiddleware: Record<string, MiddlewareGuard>,
 ): void {
   router.beforeEach(async (to, from) => {
-    // Execute Global Middleware in order
+    // Execute global middleware in order
     for (const middleware of globalMiddleware) {
-      const result = await middleware(to, from);
+      const result = await middleware.call(undefined, to, from, () => {});
 
       if (result === false) return false;
       if (result instanceof Error) return Promise.reject(result);
@@ -59,7 +54,7 @@ export function setupMiddleware(
 
     const middlewareKeys = Array.isArray(routeMiddleware) ? routeMiddleware : [routeMiddleware];
 
-    // Execute Named Middleware in order
+    // Execute named middleware in order
     for (const key of middlewareKeys) {
       if (typeof key !== 'string') continue;
 
@@ -69,7 +64,7 @@ export function setupMiddleware(
         continue;
       }
 
-      const result = await middleware(to, from);
+      const result = await middleware.call(undefined, to, from, () => {});
 
       if (result === false) return false;
       if (result instanceof Error) return Promise.reject(result);

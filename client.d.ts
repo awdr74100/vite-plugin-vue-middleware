@@ -1,11 +1,15 @@
 declare module 'virtual:vue-middleware' {
-  import type { Router, RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
+  import type { Router, NavigationGuardWithThis, NavigationGuardReturn } from 'vue-router';
 
-  export type RouteGuardReturn = void | Error | string | boolean | RouteLocationRaw;
-  export type MiddlewareGuard = (
-    to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
-  ) => RouteGuardReturn | Promise<RouteGuardReturn>;
+  /**
+   * Route guard return type, aligned with vue-router's NavigationGuardReturn
+   */
+  export type RouteGuardReturn = NavigationGuardReturn;
+
+  /**
+   * Middleware guard function type, using NavigationGuardWithThis<undefined> for compatibility with Vue Router standards
+   */
+  export type MiddlewareGuard = NavigationGuardWithThis<undefined>;
 
   export const globalMiddleware: MiddlewareGuard[];
   export const namedMiddleware: Record<string, MiddlewareGuard>;
