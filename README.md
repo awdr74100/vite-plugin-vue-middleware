@@ -6,6 +6,10 @@
 
 File-based navigation guards for Vue Router with full type safety and automated middleware injection.
 
+<p align="center">
+  <img src="./assets/preview.png" >
+</p>
+
 ## ✨ Features
 
 - 🚀 **Zero-Config**: Automatically scans your middleware directory and generates configurations.
