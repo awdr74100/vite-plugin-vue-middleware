@@ -1,4 +1,4 @@
-import type { Router, NavigationGuardWithThis, NavigationGuardReturn } from 'vue-router';
+import type { Router, NavigationGuard, NavigationGuardReturn } from 'vue-router';
 
 /**
  * Route guard return type, aligned with vue-router's NavigationGuardReturn
@@ -7,9 +7,9 @@ export type RouteGuardReturn = NavigationGuardReturn;
 
 /**
  * Middleware guard function type
- * @description Uses NavigationGuardWithThis<undefined> to align with Vue 3 / Router 4+ standards
+ * @description Use NavigationGuard to allow direct calls without .call(undefined)
  */
-export type MiddlewareGuard = NavigationGuardWithThis<undefined>;
+export type MiddlewareGuard = NavigationGuard;
 
 /**
  * Helper function for defining middleware with type safety
@@ -39,13 +39,16 @@ export function setupMiddleware(
   namedMiddleware: Record<string, MiddlewareGuard>,
 ): void {
   router.beforeEach(async (to, from) => {
+    // No-op function to pass as the `next` argument for compatibility
+    const noop = () => {};
+
     // Execute global middleware in order
     for (const middleware of globalMiddleware) {
-      const result = await middleware.call(undefined, to, from, () => {});
+      const result = await middleware(to, from, noop);
 
       if (result === false) return false;
       if (result instanceof Error) return Promise.reject(result);
-      if (result) return result;
+      if (result !== undefined && result !== true) return result;
     }
 
     // Get current route's middleware (supports array or single string)
@@ -64,11 +67,11 @@ export function setupMiddleware(
         continue;
       }
 
-      const result = await middleware.call(undefined, to, from, () => {});
+      const result = await middleware(to, from, noop);
 
       if (result === false) return false;
       if (result instanceof Error) return Promise.reject(result);
-      if (result) return result;
+      if (result !== undefined && result !== true) return result;
     }
   });
 }
