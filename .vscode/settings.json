@@ -4,5 +4,6 @@
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "references.preferredLocation": "view",
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

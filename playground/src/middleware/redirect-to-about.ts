@@ -1,6 +1,6 @@
-import { defineMiddleware } from "virtual:vue-middleware";
+import { defineMiddleware } from 'virtual:vue-middleware';
 
 export default defineMiddleware(() => {
-  console.log("[Redirect] Intercepting /news -> /about");
-  return "/about";
+  console.log('[Redirect] Intercepting /news -> /about');
+  return '/about';
 });

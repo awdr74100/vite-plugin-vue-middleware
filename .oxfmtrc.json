@@ -3,11 +3,10 @@
   "arrowParens": "always",
   "singleQuote": true,
   "printWidth": 100,
-  "experimentalSortImports": {
-    "newlinesBetween": false
-  },
-  "experimentalSortPackageJson": {
+  "sortImports": {},
+  "sortPackageJson": {
     "sortScripts": true
   },
-  "ignorePatterns": ["node_modules/", ".agent/", "dist/", "pnpm-lock.yaml"]
+  "jsdoc": {},
+  "ignorePatterns": ["node_modules/", ".agent/", "dist/", "pnpm-lock.yaml", "assets/"]
 }

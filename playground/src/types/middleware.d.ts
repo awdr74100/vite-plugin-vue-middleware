@@ -11,6 +11,11 @@ export {}
 
 declare module 'vue-router' {
   interface RouteMeta {
-    middleware?: "abort-navigation" | "named-one" | "named-two" | "redirect-to-about" | ("abort-navigation" | "named-one" | "named-two" | "redirect-to-about")[]
+    middleware?:
+      | 'abort-navigation'
+      | 'named-one'
+      | 'named-two'
+      | 'redirect-to-about'
+      | ('abort-navigation' | 'named-one' | 'named-two' | 'redirect-to-about')[];
   }
 }

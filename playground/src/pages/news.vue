@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePage({
   meta: {
-    middleware: 'redirect-to-about'
+    middleware: 'redirect-to-about',
   },
 });
 </script>

@@ -1,6 +1,7 @@
 # vite-plugin-vue-middleware
 
 [![npm version](https://img.shields.io/npm/v/vite-plugin-vue-middleware.svg)](https://www.npmjs.com/package/vite-plugin-vue-middleware)
+[![NPM Downloads](https://img.shields.io/npm/dm/vite-plugin-vue-middleware)](https://www.npmjs.com/package/vite-plugin-vue-middleware)
 [![build status](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml/badge.svg)](https://github.com/awdr74100/vite-plugin-vue-middleware/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/vite-plugin-vue-middleware)](https://github.com/awdr74100/vite-plugin-vue-middleware/blob/main/LICENSE)
 
@@ -45,9 +46,9 @@ pnpm add -D vite-plugin-vue-middleware
 Add the plugin to your `vite.config.ts`:
 
 ```typescript
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueMiddleware from 'vite-plugin-vue-middleware'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import vueMiddleware from 'vite-plugin-vue-middleware';
 
 export default defineConfig({
   plugins: [
@@ -57,9 +58,9 @@ export default defineConfig({
       middlewareDir: 'src/middleware',
       // Optional: Custom d.ts generation path (default: 'middleware.d.ts')
       dts: 'src/types/middleware.d.ts',
-    })
-  ]
-})
+    }),
+  ],
+});
 ```
 
 ### 2. TypeScript Setup (Required)
@@ -67,11 +68,15 @@ export default defineConfig({
 To ensure TypeScript recognizes the virtual module and the generated types, follow these steps:
 
 #### **A. Add to `env.d.ts`**
+
 Reference the plugin's client types in your global declaration file:
+
 ```typescript
 /// <reference types="vite-plugin-vue-middleware/client" />
 ```
-*Alternatively, add it to `compilerOptions.types` in your `tsconfig.json`:*
+
+_Alternatively, add it to `compilerOptions.types` in your `tsconfig.json`:_
+
 ```json
 {
   "compilerOptions": {
@@ -81,6 +86,7 @@ Reference the plugin's client types in your global declaration file:
 ```
 
 #### **B. Include the generated `.d.ts`**
+
 Ensure your `tsconfig.json` includes the generated type file. If you use the **default path** (project root), you **must** add it to the `include` array:
 
 ```json
@@ -92,7 +98,8 @@ Ensure your `tsconfig.json` includes the generated type file. If you use the **d
   ]
 }
 ```
-*Note: if you generate the file inside `src/` (e.g., `src/types/middleware.d.ts`), it will likely be covered by your existing `"src/**/*"` rule.*
+
+_Note: if you generate the file inside `src/` (e.g., `src/types/middleware.d.ts`), it will likely be covered by your existing `"src/**/*"` rule._
 
 ### 3. Create Middleware
 
@@ -100,14 +107,14 @@ Create middleware files in your `src/middleware` directory:
 
 ```typescript
 // src/middleware/01.auth.global.ts
-import { defineMiddleware } from 'virtual:vue-middleware'
+import { defineMiddleware } from 'virtual:vue-middleware';
 
 export default defineMiddleware((to, from) => {
-  const isLogged = false // simulate auth state
+  const isLogged = false; // simulate auth state
   if (!isLogged && to.path !== '/login') {
-    return '/login'
+    return '/login';
   }
-})
+});
 ```
 
 ### 4. Inject into Router
@@ -116,18 +123,20 @@ Import and use `setupMiddleware` during your router initialization:
 
 ```typescript
 // src/router/index.ts
-import { createRouter, createWebHistory } from 'vue-router'
-import { setupMiddleware } from 'virtual:vue-middleware'
+import { createRouter, createWebHistory } from 'vue-router';
+import { setupMiddleware } from 'virtual:vue-middleware';
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: [/* your routes */]
-})
+  routes: [
+    /* your routes */
+  ],
+});
 
 // Automatically bind middleware logic to router guards
-setupMiddleware(router)
+setupMiddleware(router);
 
-export default router
+export default router;
 ```
 
 ---
@@ -143,10 +152,10 @@ The plugin provides a wrapper around `router.beforeEach` to handle the middlewar
 
 Handlers support `async/await` and follow the same logic as `vue-router` guards:
 
--   **`return`**: Continue to the next middleware or navigation.
--   **`return false`**: Abort the navigation.
--   **`return '/path'`**: Redirect to a specific path.
--   **`return { name: 'login' }`**: Redirect to a named route.
+- **`return`**: Continue to the next middleware or navigation.
+- **`return false`**: Abort the navigation.
+- **`return '/path'`**: Redirect to a specific path.
+- **`return { name: 'login' }`**: Redirect to a named route.
 
 ---
 
@@ -154,11 +163,11 @@ Handlers support `async/await` and follow the same logic as `vue-router` guards:
 
 The plugin uses file naming to determine middleware properties:
 
-| Rule | Example | Description |
-| :--- | :--- | :--- |
-| **Global Execution** | `auth.global.ts` | Applied to all route navigations automatically. |
-| **Execution Order** | `01.log.ts` | Numeric prefix determines weight (lower numbers run first). |
-| **Named Middleware** | `guest.ts` | Manually referenced in route `meta` or SFC `definePage`. |
+| Rule                 | Example          | Description                                                 |
+| :------------------- | :--------------- | :---------------------------------------------------------- |
+| **Global Execution** | `auth.global.ts` | Applied to all route navigations automatically.             |
+| **Execution Order**  | `01.log.ts`      | Numeric prefix determines weight (lower numbers run first). |
+| **Named Middleware** | `guest.ts`       | Manually referenced in route `meta` or SFC `definePage`.    |
 
 ### Using Named Middleware in Pages
 
@@ -169,10 +178,10 @@ const routes = [
     component: () => import('./Dashboard.vue'),
     meta: {
       // Benefit from generated .d.ts with full IntelliSense
-      middleware: ['auth', '02-analytics']
-    }
-  }
-]
+      middleware: ['auth', '02-analytics'],
+    },
+  },
+];
 ```
 
 ### 🌟 Integration with Vue Router v5 (File-based Routing)
@@ -184,24 +193,24 @@ This plugin is fully compatible with the modern **Vue Router v5** ecosystem and 
 /**
  * Using definePage (Vue Router v5 / unplugin-vue-router)
  */
-import { definePage } from 'unplugin-vue-router/runtime'
+import { definePage } from 'unplugin-vue-router/runtime';
 
 definePage({
   meta: {
     // You'll get the same type-safe IntelliSense here!
-    middleware: ['auth']
-  }
-})
+    middleware: ['auth'],
+  },
+});
 </script>
 ```
 
 ## ⚙️ Configuration
 
-| Option | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `middlewareDir` | `string` | `'src/middleware'` | Root directory to scan for middleware. |
-| `exclude` | `string[]` | `[]` | Glob patterns to ignore files. |
-| `dts` | `boolean \| string` | `true` | Enable/Disable .d.ts generation or specify path. |
+| Option          | Type                | Default            | Description                                      |
+| :-------------- | :------------------ | :----------------- | :----------------------------------------------- |
+| `middlewareDir` | `string`            | `'src/middleware'` | Root directory to scan for middleware.           |
+| `exclude`       | `string[]`          | `[]`               | Glob patterns to ignore files.                   |
+| `dts`           | `boolean \| string` | `true`             | Enable/Disable .d.ts generation or specify path. |
 
 ## 📄 License
 

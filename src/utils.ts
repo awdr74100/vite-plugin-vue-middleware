@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
-import { glob } from 'tinyglobby';
-import path from 'pathe';
 
-/**
- * Middleware file information
- */
+import path from 'pathe';
+import { glob } from 'tinyglobby';
+
+/** Middleware file information */
 export type MiddlewareFile = {
   name: string;
   path: string;
@@ -14,12 +13,17 @@ export type MiddlewareFile = {
 
 /**
  * Parse middleware directory and generate a file list
- * @description Reads JS/TS files in the specified directory and parses naming rules (EAFP)
+ *
+ * Reads JS/TS files in the specified directory and parses naming rules (EAFP)
+ *
  * @param {string} dir - Directory path
  * @param {string[]} exclude - List of glob patterns to exclude
  * @returns {Promise<MiddlewareFile[]>} Parsed middleware file list
  */
-export async function parseMiddlewareFiles(dir: string, exclude: string[] = []): Promise<MiddlewareFile[]> {
+export async function parseMiddlewareFiles(
+  dir: string,
+  exclude: string[] = [],
+): Promise<MiddlewareFile[]> {
   try {
     await fs.access(dir);
   } catch {
@@ -72,12 +76,17 @@ export async function parseMiddlewareFiles(dir: string, exclude: string[] = []):
 
 /**
  * Generate TypeScript declaration file (d.ts)
- * @description Extends RouteMeta of vue-router based on current middleware files
+ *
+ * Extends RouteMeta of vue-router based on current middleware files
+ *
  * @param {MiddlewareFile[]} middlewareFiles - List of middleware files
  * @param {string} dtsPath - Output file path
  * @returns {Promise<void>}
  */
-export async function generateDts(middlewareFiles: MiddlewareFile[], dtsPath: string): Promise<void> {
+export async function generateDts(
+  middlewareFiles: MiddlewareFile[],
+  dtsPath: string,
+): Promise<void> {
   const namedMiddlewares = middlewareFiles.filter((m) => !m.isGlobal).map((m) => `"${m.name}"`);
 
   const typeUnion = namedMiddlewares.length > 0 ? namedMiddlewares.join(' | ') : 'string';
