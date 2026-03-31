@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { setupMiddleware, defineMiddleware } from '../src/runtime';
 
 describe('runtime: setupMiddleware', () => {
@@ -21,8 +22,12 @@ describe('runtime: setupMiddleware', () => {
 
   it('should execute global middleware in order', async () => {
     const callOrder: string[] = [];
-    const m1 = defineMiddleware(async () => { callOrder.push('m1'); });
-    const m2 = defineMiddleware(async () => { callOrder.push('m2'); });
+    const m1 = defineMiddleware(async () => {
+      callOrder.push('m1');
+    });
+    const m2 = defineMiddleware(async () => {
+      callOrder.push('m2');
+    });
 
     setupMiddleware(router as any, [m1, m2], {});
 
@@ -46,9 +51,13 @@ describe('runtime: setupMiddleware', () => {
 
   it('should handle named middleware from route meta', async () => {
     const callOrder: string[] = [];
-    const m1 = defineMiddleware(async () => { callOrder.push('m1'); });
+    const m1 = defineMiddleware(async () => {
+      callOrder.push('m1');
+    });
     const named = {
-      auth: defineMiddleware(async () => { callOrder.push('auth'); }),
+      auth: defineMiddleware(async () => {
+        callOrder.push('auth');
+      }),
     };
 
     setupMiddleware(router as any, [m1], named);
@@ -62,8 +71,12 @@ describe('runtime: setupMiddleware', () => {
   it('should handle multiple named middleware in route meta array', async () => {
     const callOrder: string[] = [];
     const named = {
-      a: defineMiddleware(async () => { callOrder.push('a'); }),
-      b: defineMiddleware(async () => { callOrder.push('b'); }),
+      a: defineMiddleware(async () => {
+        callOrder.push('a');
+      }),
+      b: defineMiddleware(async () => {
+        callOrder.push('b');
+      }),
     };
 
     setupMiddleware(router as any, [], named);
@@ -81,13 +94,17 @@ describe('runtime: setupMiddleware', () => {
     const to = { meta: { middleware: 'missing' } } as any;
 
     await beforeEachHandler(to, {} as any);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Middleware "missing" not found'));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Middleware "missing" not found'),
+    );
     consoleSpy.mockRestore();
   });
 
   it('should handle errors thrown in middleware', async () => {
     const error = new Error('fail');
-    const m1 = defineMiddleware(async () => { throw error; });
+    const m1 = defineMiddleware(async () => {
+      throw error;
+    });
 
     setupMiddleware(router as any, [m1], {});
 
@@ -100,6 +117,8 @@ describe('runtime: setupMiddleware', () => {
 
     setupMiddleware(router as any, [m1], {});
 
-    await expect(beforeEachHandler({ meta: {} } as any, {} as any)).rejects.toThrow('returned fail');
+    await expect(beforeEachHandler({ meta: {} } as any, {} as any)).rejects.toThrow(
+      'returned fail',
+    );
   });
 });

@@ -1,26 +1,25 @@
 import type { Router, NavigationGuard, NavigationGuardReturn } from 'vue-router';
 
-/**
- * Route guard return type, aligned with vue-router's NavigationGuardReturn
- */
+/** Route guard return type, aligned with vue-router's NavigationGuardReturn */
 export type RouteGuardReturn = NavigationGuardReturn;
 
 /**
  * Middleware guard function type
- * @description Use NavigationGuard to allow direct calls without .call(undefined)
+ *
+ * Use NavigationGuard to allow direct calls without .call(undefined)
  */
 export type MiddlewareGuard = NavigationGuard;
 
 /**
  * Helper function for defining middleware with type safety
  *
+ * @example
+ *   export default defineMiddleware((to, from) => {
+ *     if (!isLoggedIn()) return '/login';
+ *   });
+ *
  * @param {MiddlewareGuard} middleware - Middleware handler function
  * @returns {MiddlewareGuard}
- *
- * @example
- * export default defineMiddleware((to, from) => {
- *   if (!isLoggedIn()) return '/login'
- * })
  */
 export function defineMiddleware(middleware: MiddlewareGuard): MiddlewareGuard {
   return middleware;

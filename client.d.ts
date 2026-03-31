@@ -1,14 +1,13 @@
 declare module 'virtual:vue-middleware' {
   import type { Router, NavigationGuard, NavigationGuardReturn } from 'vue-router';
 
-  /**
-   * Route guard return type, aligned with vue-router's NavigationGuardReturn
-   */
+  /** Route guard return type, aligned with vue-router's NavigationGuardReturn */
   export type RouteGuardReturn = NavigationGuardReturn;
 
   /**
    * Middleware guard function type
-   * @description Use NavigationGuard to allow direct calls without .call(undefined)
+   *
+   * Use NavigationGuard to allow direct calls without .call(undefined)
    */
   export type MiddlewareGuard = NavigationGuard;
 
@@ -18,4 +17,3 @@ declare module 'virtual:vue-middleware' {
   export const setupMiddleware: (router: Router) => void;
   export const defineMiddleware: (middleware: MiddlewareGuard) => MiddlewareGuard;
 }
-

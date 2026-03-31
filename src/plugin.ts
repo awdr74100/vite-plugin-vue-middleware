@@ -1,24 +1,26 @@
 import path from 'pathe';
 import type { Plugin, ResolvedConfig } from 'vite';
+
 import { generateDts, parseMiddlewareFiles } from './utils';
 
-/**
- * Plugin configuration options
- */
+/** Plugin configuration options */
 export type Options = {
   /**
    * Directory containing middleware files, relative to project root
+   *
    * @default 'src/middleware'
    */
   middlewareDir?: string;
   /**
    * Glob patterns to exclude from scanning
-   * @default []
+   *
+   * @default [ ]
    */
   exclude?: string[];
   /**
-   * Whether to automatically generate TypeScript declaration file.
-   * Can be a boolean or a custom string path (relative or absolute).
+   * Whether to automatically generate TypeScript declaration file. Can be a boolean or a custom
+   * string path (relative or absolute).
+   *
    * @default true
    */
   dts?: boolean | string;
@@ -29,7 +31,9 @@ const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID;
 
 /**
  * Vite Plugin: Vue Middleware
- * @description Type-safe navigation middleware for Vue Router with virtual module and HMR support
+ *
+ * Type-safe navigation middleware for Vue Router with virtual module and HMR support
+ *
  * @param {Partial<Options>} options - Plugin configuration options
  * @returns {Plugin}
  */
@@ -41,7 +45,9 @@ export function vueMiddleware(options: Partial<Options> = {}): Plugin {
 
   /**
    * Initialize and cache plugin-required paths
-   * @description Lazily resolves middleware directory and d.ts output path based on config (follows EAFP)
+   *
+   * Lazily resolves middleware directory and d.ts output path based on config (follows EAFP)
+   *
    * @returns {Promise<{ resolvedDir: string; resolvedDtsPath?: string }>}
    */
   async function initPaths() {
@@ -94,7 +100,8 @@ export function vueMiddleware(options: Partial<Options> = {}): Plugin {
         const { resolvedDir } = await initPaths();
         const files = await parseMiddlewareFiles(resolvedDir, exclude);
 
-        let code = 'import { setupMiddleware as _setup } from "vite-plugin-vue-middleware/runtime";\n';
+        let code =
+          'import { setupMiddleware as _setup } from "vite-plugin-vue-middleware/runtime";\n';
         code += 'export { defineMiddleware } from "vite-plugin-vue-middleware/runtime";\n\n';
 
         const globalImports: string[] = [];

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePage({
   meta: {
-    middleware: 'abort-navigation'
+    middleware: 'abort-navigation',
   },
 });
 </script>

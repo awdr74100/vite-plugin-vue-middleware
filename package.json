@@ -55,6 +55,7 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "prepublishOnly": "pnpm run build",
