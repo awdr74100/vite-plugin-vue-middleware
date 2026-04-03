@@ -108,5 +108,7 @@ declare module 'vue-router' {
   }
 }
 `;
+  const dtsDir = path.dirname(dtsPath);
+  await fs.mkdir(dtsDir, { recursive: true });
   await fs.writeFile(dtsPath, dtsContent, 'utf-8');
 }
