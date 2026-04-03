@@ -77,10 +77,11 @@ describe('plugin: generateDts', () => {
       { name: 'log', path: '', isGlobal: true, order: 0 },
     ];
 
-    await generateDts(files as any, '/out.d.ts');
+    await generateDts(files as any, '/types/out.d.ts');
 
+    expect(fs.mkdir).toHaveBeenCalledWith('/types', { recursive: true });
     expect(fs.writeFile).toHaveBeenCalledWith(
-      '/out.d.ts',
+      '/types/out.d.ts',
       expect.stringContaining('middleware?: "auth" | ("auth")[]'),
       'utf-8',
     );
