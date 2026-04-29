@@ -126,6 +126,7 @@ describe('runtime: setupMiddleware', () => {
 
 describe('runtime: __executeMiddleware', () => {
   it('should execute a synchronous generator as middleware', () => {
+    // eslint-disable-next-line require-yield
     const middleware = __executeMiddleware(function* (_to: any, _from: any) {
       return '/home';
     } as any);
@@ -153,6 +154,7 @@ describe('runtime: __executeMiddleware', () => {
 
     let receivedTo: any, receivedFrom: any, receivedNext: any;
 
+    // eslint-disable-next-line require-yield
     const middleware = __executeMiddleware(function* (t: any, f: any, n: any) {
       receivedTo = t;
       receivedFrom = f;
