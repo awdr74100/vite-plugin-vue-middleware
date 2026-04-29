@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      acorn:
-        specifier: ^8.16.0
-        version: 8.16.0
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
@@ -24,6 +21,9 @@ importers:
       '@types/node':
         specifier: ^24.12.0
         version: 24.12.0
+      acorn:
+        specifier: ^8.16.0
+        version: 8.16.0
       bumpp:
         specifier: ^11.0.1
         version: 11.0.1
