@@ -1,5 +1,4 @@
 import { type App } from 'vue';
-
 import type { Router, NavigationGuard, NavigationGuardReturn } from 'vue-router';
 
 /** Route guard return type, aligned with vue-router's NavigationGuardReturn */
@@ -60,9 +59,7 @@ export function setupMiddleware(
     // Note: inject() must be called before the first await in the middleware —
     // this matches Vue's own rules for the Composition API.
     const run = (middleware: MiddlewareGuard) =>
-      _app
-        ? _app.runWithContext(() => middleware(to, from, noop))
-        : middleware(to, from, noop);
+      _app ? _app.runWithContext(() => middleware(to, from, noop)) : middleware(to, from, noop);
 
     // Execute global middleware in order
     for (const middleware of globalMiddleware) {
@@ -101,15 +98,13 @@ export function setupMiddleware(
 /**
  * Generator-based executor that preserves Vue injection context across yield boundaries.
  *
- * Each segment between yields runs inside `app.runWithContext()`, ensuring that
- * `inject()` and any composable relying on it (e.g. `useQueryClient()`) works
- * even after `await` in middleware.
+ * Each segment between yields runs inside `app.runWithContext()`, ensuring that `inject()` and any
+ * composable relying on it (e.g. `useQueryClient()`) works even after `await` in middleware.
  *
- * @internal Used by the build-time async-context transform — not intended for direct use.
- *
- * @param genFn - A generator function with the same signature as a middleware guard.
- *                `yield` replaces `await` so the executor can re-enter context on each resume.
+ * @param genFn - A generator function with the same signature as a middleware guard. `yield`
+ *   replaces `await` so the executor can re-enter context on each resume.
  * @returns A standard async MiddlewareGuard compatible with vue-router
+ * @internal Used by the build-time async-context transform — not intended for direct use.
  */
 export function __executeMiddleware(
   genFn: (...args: any[]) => Generator<any, any, any>,
@@ -126,19 +121,19 @@ export function __executeMiddleware(
         return Promise.reject(err);
       }
       if (result.done) return result.value;
-      return Promise.resolve(result.value).then(
-        (resolved) => step(resolved),
-        (err) => {
-          let errResult: IteratorResult<any>;
-          try {
-            errResult = app ? app.runWithContext(() => gen.throw(err)) : gen.throw(err);
-          } catch (e) {
-            return Promise.reject(e);
-          }
-          if (errResult.done) return errResult.value;
-          return Promise.resolve(errResult.value).then((resolved) => step(resolved));
-        },
-      );
+      return Promise.resolve(result.value).then(step, throwIntoGen);
+    }
+
+    function throwIntoGen(err: any): any {
+      let errResult: IteratorResult<any>;
+      try {
+        errResult = app ? app.runWithContext(() => gen.throw(err)) : gen.throw(err);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+      if (errResult.done) return errResult.value;
+      // Use mutual recursion so subsequent rejections are also propagated through gen.throw()
+      return Promise.resolve(errResult.value).then(step, throwIntoGen);
     }
 
     return step();

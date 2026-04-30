@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { parse } from 'acorn';
+import { describe, it, expect } from 'vitest';
 
 import { _transformAsyncMiddleware as transformAsyncMiddleware } from '../src/plugin';
 
