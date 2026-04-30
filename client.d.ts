@@ -16,4 +16,13 @@ declare module 'virtual:vue-middleware' {
 
   export const setupMiddleware: (router: Router) => void;
   export const defineMiddleware: (middleware: MiddlewareGuard) => MiddlewareGuard;
+
+  /**
+   * Generator-based executor that preserves Vue injection context across yield boundaries.
+   *
+   * @internal Used by the build-time async-context transform — not intended for direct use.
+   */
+  export const __executeMiddleware: (
+    genFn: (...args: Parameters<MiddlewareGuard>) => Generator,
+  ) => MiddlewareGuard;
 }

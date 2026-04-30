@@ -6,6 +6,9 @@ import router from '@/router';
 
 const app = createApp(App);
 
+app.provide('hobbies', ['coding', 'reading', 'running']);
+app.provide('name', 'Zack');
+
 app.use(router);
 
 app.mount('#app');
