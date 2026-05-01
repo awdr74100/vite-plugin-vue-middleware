@@ -1,7 +1,7 @@
 import { parse } from 'acorn';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { _transformAsyncMiddleware as transformAsyncMiddleware } from '../src/plugin';
+import { transformAsyncMiddleware } from '../src/transform';
 
 /** Helper: parse JS code using acorn (same ESTree format as Rollup's this.parse) */
 const acornParse = (code: string) =>
@@ -132,5 +132,79 @@ export default defineMiddleware(async (to, from) => {
 
     const result = transformAsyncMiddleware(code, acornParse);
     expect(result).toBeUndefined();
+  });
+
+  it('should add parens around a single bare-identifier param (async to => ...)', () => {
+    const code = `import { defineMiddleware } from 'vite-plugin-vue-middleware/runtime';
+export default defineMiddleware(async to => {
+  await fetchData();
+  return to.path;
+});`;
+
+    const result = transformAsyncMiddleware(code, acornParse);
+    expect(result).toBeDefined();
+    // Must be `function* (to)` — `function* to` is a syntax error
+    expect(result!.code).toMatch(/function\*\s*\(\s*to\s*\)/);
+    expect(result!.code).toContain('yield fetchData()');
+
+    // Sanity check: result must be syntactically valid JS
+    expect(() => acornParse(result!.code)).not.toThrow();
+  });
+
+  it('should NOT add parens when the single param already has them', () => {
+    const code = `import { defineMiddleware } from 'vite-plugin-vue-middleware/runtime';
+export default defineMiddleware(async (to) => {
+  await fetchData();
+});`;
+
+    const result = transformAsyncMiddleware(code, acornParse);
+    expect(result).toBeDefined();
+    // Should not duplicate the parens
+    expect(result!.code).not.toMatch(/\(\(\s*to\s*\)\)/);
+    expect(() => acornParse(result!.code)).not.toThrow();
+  });
+
+  it('should bail out and warn when middleware uses `for await...of`', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const code = `import { defineMiddleware } from 'vite-plugin-vue-middleware/runtime';
+export default defineMiddleware(async (to, from) => {
+  for await (const x of stream()) {
+    console.log(x);
+  }
+});`;
+
+    const result = transformAsyncMiddleware(code, acornParse);
+    expect(result).toBeUndefined();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('for await...of'));
+    warnSpy.mockRestore();
+  });
+
+  it('should not transform async generator functions', () => {
+    const code = `import { defineMiddleware } from 'vite-plugin-vue-middleware/runtime';
+export default defineMiddleware(async function* (to, from) {
+  yield await fetchData();
+});`;
+
+    const result = transformAsyncMiddleware(code, acornParse);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined when defineMiddleware is called without arguments', () => {
+    const code = `import { defineMiddleware } from 'vite-plugin-vue-middleware/runtime';
+defineMiddleware();
+async function other() { await foo(); }`;
+
+    expect(transformAsyncMiddleware(code, acornParse)).toBeUndefined();
+  });
+
+  it('should produce parseable output for an arrow with expression body', () => {
+    const code = `import { defineMiddleware } from 'vite-plugin-vue-middleware/runtime';
+export default defineMiddleware(async (to) => (await load(to)));`;
+
+    const result = transformAsyncMiddleware(code, acornParse);
+    expect(result).toBeDefined();
+    expect(result!.code).toContain('{ return ');
+    expect(result!.code).toContain('yield load(to)');
+    expect(() => acornParse(result!.code)).not.toThrow();
   });
 });

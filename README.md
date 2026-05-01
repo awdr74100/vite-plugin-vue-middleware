@@ -207,11 +207,11 @@ definePage({
 
 ## ⚙️ Configuration
 
-| Option          | Type                | Default            | Description                                                                                      |
-| :-------------- | :------------------ | :----------------- | :----------------------------------------------------------------------------------------------- |
-| `middlewareDir` | `string`            | `'src/middleware'` | Root directory to scan for middleware.                                                           |
-| `exclude`       | `string[]`          | `[]`               | Glob patterns to ignore files.                                                                   |
-| `dts`           | `boolean \| string` | `true`             | Enable/Disable .d.ts generation or specify path.                                                 |
+| Option          | Type                | Default            | Description                                                                                       |
+| :-------------- | :------------------ | :----------------- | :------------------------------------------------------------------------------------------------ |
+| `middlewareDir` | `string`            | `'src/middleware'` | Root directory to scan for middleware.                                                            |
+| `exclude`       | `string[]`          | `[]`               | Glob patterns to ignore files.                                                                    |
+| `dts`           | `boolean \| string` | `true`             | Enable/Disable .d.ts generation or specify path.                                                  |
 | `asyncContext`  | `boolean`           | `true`             | Preserve Vue injection context (`inject()`) across `await` boundaries via a build-time transform. |
 
 ---
@@ -254,7 +254,7 @@ The transform is transparent — you write standard `async/await` and the plugin
 To opt out of the transform entirely:
 
 ```typescript
-vueMiddleware({ asyncContext: false })
+vueMiddleware({ asyncContext: false });
 ```
 
 ## 📄 License
