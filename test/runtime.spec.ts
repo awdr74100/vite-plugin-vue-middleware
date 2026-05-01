@@ -9,10 +9,10 @@ describe('runtime: setupMiddleware', () => {
   beforeEach(() => {
     beforeEachHandler = null;
     router = {
-      beforeEach: vi.fn((handler) => {
+      beforeEach: vi.fn<(handler: any) => void>((handler) => {
         beforeEachHandler = handler;
       }),
-      install: vi.fn(),
+      install: vi.fn<() => void>(),
     };
   });
 
@@ -41,7 +41,7 @@ describe('runtime: setupMiddleware', () => {
 
   it('should stop and return the result if global middleware redirects', async () => {
     const m1 = defineMiddleware(async () => '/login');
-    const m2 = vi.fn();
+    const m2 = vi.fn<() => void>();
 
     setupMiddleware(router as any, [m1, m2 as any], {});
 
