@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 
 import { glob } from 'tinyglobby';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { parseMiddlewareFiles, generateDts } from '../src/index';
+import { generateDts, parseMiddlewareFiles } from '../src/index';
 
 vi.mock('node:fs/promises');
 vi.mock('tinyglobby');
@@ -64,6 +64,15 @@ describe('plugin: parseMiddlewareFiles', () => {
       }),
     );
   });
+
+  it('should sort by name as a stable secondary key when orders tie', async () => {
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    // Return in deliberately reversed alphabetical order
+    vi.mocked(glob).mockResolvedValue(['/base/zeta.ts', '/base/alpha.ts', '/base/mike.ts']);
+
+    const result = await parseMiddlewareFiles('/base');
+    expect(result.map((m) => m.name)).toEqual(['alpha', 'mike', 'zeta']);
+  });
 });
 
 describe('plugin: generateDts', () => {
@@ -94,5 +103,23 @@ describe('plugin: generateDts', () => {
       expect.stringContaining('middleware?: string | (string)[]'),
       'utf-8',
     );
+  });
+
+  it('should skip writing when on-disk content is identical', async () => {
+    const files = [{ name: 'auth', path: '', isGlobal: false, order: 0 }];
+
+    // First call writes
+    await generateDts(files as any, '/out.d.ts');
+    const firstWriteCall = vi.mocked(fs.writeFile).mock.calls[0];
+    const writtenContent = firstWriteCall![1] as string;
+
+    // Reset and simulate the file already containing the same content
+    vi.clearAllMocks();
+    vi.mocked(fs.readFile).mockResolvedValue(writtenContent as any);
+
+    await generateDts(files as any, '/out.d.ts');
+
+    expect(fs.writeFile).not.toHaveBeenCalled();
+    expect(fs.mkdir).not.toHaveBeenCalled();
   });
 });
