@@ -18,6 +18,7 @@ File-based navigation guards for Vue Router with full type safety and automated 
 - 📦 **Virtual Module**: Seamlessly integrate with your router using `virtual:vue-middleware`.
 - 🔄 **HMR Support**: Adding, removing, or renaming middleware files triggers hot updates and type regeneration.
 - 🛠️ **Flexible Order**: Supports global middleware (.global) and custom execution weight via numeric prefixes.
+- 🔗 **Async Context**: Automatically preserves Vue injection context (`inject()`) across `await` boundaries in async middleware via a build-time transform.
 
 ## 📦 Installation
 
@@ -206,11 +207,55 @@ definePage({
 
 ## ⚙️ Configuration
 
-| Option          | Type                | Default            | Description                                      |
-| :-------------- | :------------------ | :----------------- | :----------------------------------------------- |
-| `middlewareDir` | `string`            | `'src/middleware'` | Root directory to scan for middleware.           |
-| `exclude`       | `string[]`          | `[]`               | Glob patterns to ignore files.                   |
-| `dts`           | `boolean \| string` | `true`             | Enable/Disable .d.ts generation or specify path. |
+| Option          | Type                | Default            | Description                                                                                      |
+| :-------------- | :------------------ | :----------------- | :----------------------------------------------------------------------------------------------- |
+| `middlewareDir` | `string`            | `'src/middleware'` | Root directory to scan for middleware.                                                           |
+| `exclude`       | `string[]`          | `[]`               | Glob patterns to ignore files.                                                                   |
+| `dts`           | `boolean \| string` | `true`             | Enable/Disable .d.ts generation or specify path.                                                 |
+| `asyncContext`  | `boolean`           | `true`             | Preserve Vue injection context (`inject()`) across `await` boundaries via a build-time transform. |
+
+---
+
+## 🔗 Async Context
+
+By default, `asyncContext` is enabled. It applies a **build-time AST transform** to every async middleware function that contains `await`, allowing `inject()` and composables that rely on it (e.g. `useQueryClient()`, `useStore()`) to work correctly even **after** `await` statements.
+
+### The Problem
+
+Vue's `inject()` API only works inside an active component or application context. In standard async middleware, calling `inject()` after an `await` boundary fails because the execution context is lost:
+
+```typescript
+// ❌ inject() called after await — throws outside of Vue context
+export default defineMiddleware(async (to, from) => {
+  await someAsyncCheck();
+  const store = useStore(); // Runtime error: inject() must be called inside setup()
+});
+```
+
+### How It Works
+
+When `asyncContext: true` (default), the plugin transforms async middleware into a **generator-based executor** at build time. Each segment between `yield` points runs inside [`app.runWithContext()`](https://vuejs.org/api/application.html#app-runwithcontext), restoring the Vue injection context on every resume:
+
+```typescript
+// ✅ Works — inject() is available on every segment after await
+export default defineMiddleware(async (to, from) => {
+  await someAsyncCheck();
+  const store = useStore(); // Works correctly
+});
+```
+
+The transform is transparent — you write standard `async/await` and the plugin handles the rest. No manual changes are required.
+
+### Limitations
+
+- **`for await...of`**: Not supported with the async-context transform. A warning is logged and the affected middleware runs without context preservation across `await` boundaries.
+- **Nested async functions**: Only top-level `await` expressions in the `defineMiddleware` callback are transformed. Nested async functions are left untouched.
+
+To opt out of the transform entirely:
+
+```typescript
+vueMiddleware({ asyncContext: false })
+```
 
 ## 📄 License
 
