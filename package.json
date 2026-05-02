@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-vue-middleware",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "File-based navigation guards for Vue Router",
   "keywords": [
     "middleware",
