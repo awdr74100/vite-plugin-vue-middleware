@@ -50,6 +50,17 @@ describe('runtime: setupMiddleware', () => {
     expect(m2).not.toHaveBeenCalled();
   });
 
+  it('should abort navigation and stop the pipeline when middleware returns false', async () => {
+    const m1 = defineMiddleware(async () => false);
+    const m2 = vi.fn<() => void>();
+
+    setupMiddleware(router as any, [m1, m2 as any], {});
+
+    const result = await beforeEachHandler({ meta: {} } as any, {} as any);
+    expect(result).toBe(false);
+    expect(m2).not.toHaveBeenCalled();
+  });
+
   it('should handle named middleware from route meta', async () => {
     const callOrder: string[] = [];
     const m1 = defineMiddleware(async () => {
